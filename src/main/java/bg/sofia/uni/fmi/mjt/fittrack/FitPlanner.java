@@ -15,7 +15,6 @@ public class FitPlanner implements FitPlannerAPI {
         if (availableWorkouts == null) {
             throw new IllegalArgumentException("Available workouts cannot be null");
         }
-        // Използваме Set.copyOf за имутабилност
         this.workouts = Set.copyOf(availableWorkouts);
     }
 
@@ -27,15 +26,16 @@ public class FitPlanner implements FitPlannerAPI {
     @Override
     public List<Workout> getWorkoutsSortedByCalories() {
         return workouts.stream()
-                .sorted(Comparator.comparingInt(Workout::getCaloriesBurned).reversed())
-                .collect(Collectors.toUnmodifiableList());
+                // Вместо Workout::getCaloriesBurned, ползваме ламбда:
+                .sorted(Comparator.comparingInt((Workout w) -> w.getCaloriesBurned()).reversed())
+                .toList();
     }
 
     @Override
     public Map<WorkoutType, List<Workout>> getWorkoutsGroupedByType() {
         return workouts.stream()
                 .collect(Collectors.groupingBy(
-                        Workout::getType,
+                        w -> w.getType(),
                         Collectors.toUnmodifiableList()
                 ));
     }
@@ -48,7 +48,7 @@ public class FitPlanner implements FitPlannerAPI {
 
         return workouts.stream()
                 .filter(workout -> filters.stream().allMatch(filter -> filter.matches(workout)))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -90,16 +90,16 @@ public class FitPlanner implements FitPlannerAPI {
         }
 
         return plan.stream()
-                .sorted(Comparator.comparingInt(Workout::getCaloriesBurned).reversed()
-                        .thenComparing(Comparator.comparingInt(Workout::getDifficulty).reversed()))
-                .collect(Collectors.toList());
+                .sorted(Comparator.comparingInt((Workout w) -> w.getCaloriesBurned()).reversed()
+                        .thenComparing(Comparator.comparingInt((Workout w) -> w.getDifficulty()).reversed()))
+                .toList();
     }
 
     @Override
     public List<Workout> getWorkoutsSortedByDifficulty() {
         return workouts.stream()
-                .sorted(Comparator.comparingInt(Workout::getDifficulty))
-                .collect(Collectors.toUnmodifiableList());
+                // Тук също - ламбдата казва "сравни по трудност"
+                .sorted(Comparator.comparingInt(w -> w.getDifficulty()))
+                .toList();
     }
-
 }

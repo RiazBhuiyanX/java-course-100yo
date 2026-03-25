@@ -1,12 +1,12 @@
-package bg.sofia.uni.fmi.mjt.fittrack; // Провери дали това е твоят пакет
+package bg.sofia.uni.fmi.mjt.fittrack;
 
 import bg.sofia.uni.fmi.mjt.fittrack.workout.*;
+import bg.sofia.uni.fmi.mjt.fittrack.workout.filter.*;
 import bg.sofia.uni.fmi.mjt.fittrack.exception.OptimalPlanImpossibleException;
 
-import java.io.BufferedReader;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
@@ -21,18 +21,31 @@ public class Main {
 
         FitPlanner planner = new FitPlanner(workouts);
 
-        try {
-            System.out.println("--- Генериране на оптимален план за 120 минути ---");
-            List<Workout> plan = planner.generateOptimalWeeklyPlan(120);
+        System.out.println("\n--- Тренировки, сортирани по калории (max -> min) ---");
+        planner.getWorkoutsSortedByCalories().forEach(w ->
+                System.out.println(w.getName() + ": " + w.getCaloriesBurned() + " kcal"));
 
-            for (Workout w : plan) {
-                System.out.println(w.getName() + " | Калории: " + w.getCaloriesBurned() + " | Време: " + w.getDuration() + " | Сложност: " + w.getDifficulty());
-            }
+        System.out.println("\n--- Тренировки, сортирани по трудност (easy -> hard) ---");
+        planner.getWorkoutsSortedByDifficulty().forEach(w ->
+                System.out.println(w.getName() + ": Ниво " + w.getDifficulty()));
+
+        System.out.println("\n--- Групиране по тип тренировка ---");
+        Map<WorkoutType, List<Workout>> grouped = planner.getWorkoutsGroupedByType();
+        grouped.forEach((type, list) -> {
+            System.out.println(type + ": " + list.size() + " тренировки");
+            list.forEach(w -> System.out.println("  - " + w.getName()));
+        });
+
+
+        try {
+            System.out.println("\n--- Генериране на оптимален план за 120 минути ---");
+            List<Workout> plan = planner.generateOptimalWeeklyPlan(120);
+            plan.forEach(w -> System.out.println(w.getName() + " | " + w.getCaloriesBurned() + " kcal | " + w.getDuration() + " min |" + w.getDifficulty() + " diff"));
 
         } catch (OptimalPlanImpossibleException e) {
             System.err.println("Грешка: Не може да се генерира план: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            System.err.println("Грешка: Невалидни входни данни: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Възникна неочаквана грешка: " + e.getMessage());
         }
     }
 }
